@@ -1,0 +1,1 @@
+chrome.extension.sendRequest({'event':'open_admin'},function(feed) { window.close(); });

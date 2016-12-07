@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+ 	<meta charset="utf-8">
+	<title>Chroma Livecoding</title>
+	<script type="text/javascript" src='includes/scripts/jquery.js'></script>
+	<script type="text/javascript" src='includes/scripts/jquery-ui.min.js'></script>
+	<link rel="stylesheet" type="text/css" href="includes/bootstrap/css/bootstrap.css">
+	<script type="text/javascript" src='admin.js'></script>
+</head>
+
+<style>
+html { width:1696px; height:955px; position:relative; background:#3F4B4E; color:white; border:1px solid black; }
+body { font-family:Calibri; font-weight:bold; color:white; overflow:hidden; }
+
+.frame { position:absolute;  }
+.frame:hover, .frame.seleted { border-color:white }
+
+.frame.bottom { left:0px; bottom:0px; width:307px; height:200px }
+.frame.sidebar { left:0px; top:0px; width:349px; height:860px; }
+.frame.cam { right:0px; bottom:70px; height:267px; width:595px; }
+
+.textholder { text-align:left; outline:none; font-weight:normal; padding:4px 10px; font-size:20px; width:280px; height:120px; background:#293134; color:inherit; border:none }
+
+.box { padding:10px; position:absolute; font-size:18px; width:166px; }
+
+.row { position:relative; background:#3F4B4E; width:100%; margin:0px; padding:0px; }
+.row > div { font-size:16px; padding:0px; z-index:100; }
+.row > div > div { margin:5px; padding:5px; border-radius:3px; }
+
+#donatebig > div { background:#AF3636 }
+#donatelast > div { background:#D08B8B }
+#lastfollow > div { background:#1D8A62 }
+#music { color:white; width:300px; }
+#music .content { background:black; position:relative; width:280px; height:200px; border-radius:4px;  }
+#music .names { margin:0px; position:absolute; bottom:10px; left:10px; z-index:10; font-size:20px; font-weight:bolder; line-height:20px }
+#music .names .artist { font-size:16px; font-style:italic; }
+#music .bgcover { margin:0px; position:absolute; top:0px; left:0px; right:0px; bottom:0px; opacity:0.5; z-index:5; background-size:cover; box-shadow:0px 0px 3px white;}
+
+#taskstep { font-size:16px; }
+.shadow {  text-shadow:0px 0px 2px #000,0px 0px 2px #000,0px 0px 2px #000,0px 0px 2px #000,0px 0px 2px #000,0px 0px 2px #000 }
+
+</style>
+
+<body>
+
+	<div class='row'>
+		<div id='donates' class='candrag col-md-2'>		
+			<span class='shadow'>Maior donate \o/</span>	
+			<div id='biggestDonate' style='font-weight:normal'></div>		
+
+			<span class='shadow'>Últimos donates ;)</span>	
+			<div id='alldonates' style='font-weight:normal'></div>		
+		</div>
+		
+		<div id='banner' class='candrag col-md-2'>
+			
+			<img style='width:100%' src='https://4e4356b68404a5138d2d-33393516977f9ca8dc54af2141da2a28.ssl.cf1.rackcdn.com/modules/baixou/shell/3.0/lay/baixou-logo.png'>
+		</div>
+
+		<div id='music' class='candrag col-md-2'>
+			
+
+			<div class='cmds shadow' style='position:absolute; top:20px; right:0px; display:none'>
+				#skip (0/3)<br/>
+				#love (0/3)
+			</div>
+			
+			<div class='content'>
+				<div class='names'>
+					<span class='toset shadow'>N/A</span>
+				</div>
+				<div class='bgcover'>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div id='taskstep' class='frame bottom candrag'>
+		<span class='shadow'>Task Atual:</span><br/>
+		<textarea id='task' class='textholder taskstep'></textarea>		
+	</div>
+
+
+</body>
+</html>
+
