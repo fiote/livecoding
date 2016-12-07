@@ -21,11 +21,19 @@
 			]
 		},
 		{
+			"matches": ["https://www.livecoding.tv/fiote/"],
+			"js": [
+				"includes/scripts/jquery.js",
+				"bot_livecoding.js"
+			]
+		},
+		{
 			"matches": ["*://www.deezer.com/*"],
 			"js": [
 				"includes/scripts/jquery.js",
 				"scrap_deezer.js"
-			]
+			],
+			"run_at" :"document_end"
 		}
 
 	],
@@ -44,5 +52,10 @@
 		"default_popup": "popup.html"
 	},
 	
+	"web_accessible_resources": [
+		"bot_livecoding_agent.js",
+		"scrap_deezer_agent.js"
+	],
+
 	"content_security_policy": "script-src 'self' 'unsafe-eval' https://example.com; object-src 'self'"
 }
