@@ -1,6 +1,19 @@
+console.log('dbUsers loading...');
+dbUsers = {};
+chrome.storage.sync.get('dbUsers',function(value) {
+	console.log(value);
+	dbUsers = value;
+	console.log('dbUsers loaded!');
+});
+
 classBot = function() {	
 	var self = this;
+	
 	this.lastdate = new Date().getTime();
+
+	this.points = {
+		'register':100
+	};
 
 	this.setTab = function(tab) {
 		this.tab = tab;
@@ -13,32 +26,61 @@ classBot = function() {
 
 		var parts = obj.message.split(' ');
 		var cmd = parts.shift();
-		var user = obj.username;
-
-		console.log('gotMessage',obj);
+		var username = obj.username;
 
 		// user commands
+		if (cmd == '#entrar') this.addUser(username,'BR');
+		if (cmd == '#enter') this.addUser(username,'EN');
+
+		if (cmd == '#help') this.showHelp(username);
+
+		// player commands
 		if (cmd == '#music') this.replyMusic();
-		if (cmd == '#request') this.requestMusic(parts,user);
+		if (cmd == '#request') this.requestMusic(parts,username);
 		if (cmd == '#playlist') this.replyPlaylist();
 		if (cmd == '#skip') this.addSkipMusic();
 
-		if (cmd == '#help') this.showHelp();
-
 		// admin commands
-		if (user == 'fiote') {
+		if (username == 'fiote') {
 			if (cmd == '#clearqueue') this.clearQueue();
 			if (cmd == '#powerskip') myPlayer.skipMusic();
 			if (cmd == '#goradio') myPlayer.goRadio();
 		}
 	};
 
-	this.showHelp = function() {
-		this.sendMessage({'event':'msgChat','message':'Type #music to show the current song playing, #request to request any song you want and #skip to try to skip the song playing.'});
+	this.addUser = function(username,lg) {		
+		if (!dbUsers[username]) {
+			dbUsers[username] = {'username':username,'points':this.points.register};
+			var messages = {
+				'BR':'@'+username+', obrigado por entrar! Voce tem '+this.points.register+' pontos! Digite #help para saber mais.',
+				'EN':'@'+username+', thanks for joining! You have '+this.points.register+' points! Type #help to know more.'
+			}
+			this.sendMessage({'event':'msgChat','message':messages[lg]});
+		}
+		var user = dbUsers[username];
+		user.language = lg;
+		this.saveUsers();
+	};
+
+	this.showHelp = function(username) {
+		var user = dbUsers[username] || {'username':username};
+		var lg = user.language || 'EN';
+		var messages = {
+			'BR':'@'+username+', digite #music para ver a musica que esta tocando, #request para pedir uma musica (-25p) e #skip para tentar pular a musica atual (-3p).',
+			'EN':'@'+username+', type #music to show the current song playing, #request to request any song you want  (-25p) and #skip to try to skip the song playing (-3p).'
+		}
+		this.sendMessage({'event':'msgChat','message':messages[lg]});
+	};
+
+	this.saveUsers = function() {
+		console.log('dbUsers saving...');
+		chrome.storage.sync.set({'dbUsers':dbUsers}, function() {
+			console.log('dbUsers saved!');
+        });
 	};
 
 	this.gotLogin = function(obj) {
-		this.sendMessage({'event':'msgChat','message':obj.username+', welcome! Type #help to see the list of commands.'});
+		this.sendMessage({'event':'msgChat','message':obj.username+', bem-vindo & welcome! | Português? digite #entrar | English? Type #enter'});
 	};
 
 	this.replyMusic = function() {

@@ -22,12 +22,13 @@ classPlayer = function() {
 		if (!music.data.progress) return;
 
 		var last = this.history[0];		
-		
+
 		if (last && last.key == music.key) {
-			var rest = last.updateProgress(data.progress);
-			if (rest <= 3) this.checkQueue();
+			last.updateProgress(data.progress);
 			return;
 		}
+
+		this.refreshQueue();
 
 		if (this.waitingRadio) {
 			this.waitingRadio = false;
@@ -72,15 +73,23 @@ classPlayer = function() {
 		}
 		myBot.sendMessage({'event':'msgChat','message':'@'+music.requestedby+' requested "'+music.data.title+'", by '+music.data.artist+'. '+dsQueue});
 		this.queue.push(music);
-		if (!this.playingAny) this.checkQueue();
+		this.refreshQueue();
 	};
 
-	this.checkQueue = function() {
-		this.playingAny = false;
-		if (this.changingMusic) return;		
-		var music = this.queue.shift();
-		if (music) return this.changeMusic(music);		
-		if (!this.onRadio) this.goRadio();
+	this.refreshQueue = function() {		
+		this.sendMessage({'event':'setQueue','list':this.queue});
+	};
+
+	this.removeFromQueue = function(music) {
+		var index = null;
+		for (var i = 0; i < this.queue.length; i++) {
+			var m = this.queue[i];
+			if (m.data.url == music.data.url) index = i;
+		}
+		if (index >= 0) {
+			this.queue.splice(index,1);
+			this.sendMessage({'event':'setQueue','list':this.queue});
+		}
 	};
 
 	this.goRadio = function() {
@@ -101,7 +110,7 @@ classPlayer = function() {
 		this.changingMusic = true;
 		this.onRadio = false;
 		this.waitingRadio = false;
-		this.sendMessage({'event':'playSong','url':'/track/'+music.data.id});
+		this.sendMessage({'event':'playSong','url':music.data.url});
 	};
 
 	this.addSkipMusic = function() {
@@ -120,16 +129,13 @@ classPlayer = function() {
 	};
 
 	this.skipMusic = function() {
-		console.log('skipMusic',this.queue.length);
-		if (this.queue.length) return this.checkQueue();
-
 		this.changingMusic = true;
 		this.sendMessage({'event':'skipSong'});
 	};
 	
 	this.sendMessage = function(data) {
 		if (!this.tab) {
-			Util.getTab('https://www.livecoding.tv/fiote/',function(tab) {
+			Util.getTab('www.deezer.com',function(tab) {
 				self.setTab(tab);
 				self.sendMessage(data);
 			});
@@ -143,9 +149,10 @@ classMusic = function(data) {
 	this.key = JSON.stringify({'artist':data.artist,'title':data.title});
 	this.data = data;
 
+	this.data.url = '/track/'+this.data.id;
+
 	this.updateProgress = function(progress) {
 		this.data.progress = progress;
-		console.log(this.data.title,this.data.artist,this.data.progress,this.data.duration);
 		return this.data.duration - this.data.progress;
 	};
 };
@@ -156,5 +163,8 @@ chrome.extension.onRequest.addListener(function(request, sender, callback) {
 	if (request.event == 'update_music') {
 		myPlayer.setTab(sender.tab);
 		myPlayer.setMusic(request.data);
+	}
+	if (request.event == 'shift_queue') {
+		myPlayer.queue.shift();	
 	}
 });

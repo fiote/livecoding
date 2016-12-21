@@ -3,7 +3,7 @@ classUtil = function() {
 		chrome.tabs.query({},function(tabs) {
 			for (var i = 0; i < tabs.length; i++) {
 				var tab = tabs[i];
-				if (tab.url == url) callback(tab);
+				if (tab.url.indexOf(url) >= 0) callback(tab);
 			} 
 		});
 	}

@@ -1,22 +1,27 @@
 // ==================== MESSAGES FROM SCRIPT =======================
 
 window.addEventListener('message',function(e) {
+	console.log('AGENT',e);
 	if (!e.data) return;
-	if (e.data.source == 'scrap_deezer') botExecute(e.data);
+	if (e.data.source == 'script_deezer') botExecute(e.data);
 },false);
 
 // ==================== ACTING ON REQUEST =======================
 
 function botExecute(feed) {
-	if (feed.action == 'play_song') {
-		reactRouter.push(feed.url);
-		setTimeout(waitToPlay,3000);
+	console.log('botExecute',feed);
+	
+	if (feed.action == 'go_song_page') {
+		reactRouter.push(feed.url);		
+	}
+	if (feed.action == 'hit_play') {
+		setTimeout(hitPlay,1000);
 	}
 }
 
-function waitToPlay() {
+function hitPlay() {
 	var $play = $('.page-main .play-icon.play-default');
 	if ($play.length) $play.eq(0).click();
-	else setTimeout(waitToPlay,500);
+	else setTimeout(hitPlay,500);
 
 }
