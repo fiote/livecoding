@@ -1,9 +1,25 @@
+classUtil = function() {	
+	this.getTab = function(url,callback) {
+		chrome.tabs.query({},function(tabs) {
+			for (var i = 0; i < tabs.length; i++) {
+				var tab = tabs[i];
+				if (tab.url == url) callback(tab);
+			} 
+		});
+	}
+};
+
+Util = new classUtil();
+
+
+
+/*
+
 localStorage.biggestDonate = null;
 localStorage.lastDonate = null;
 
 baseDeezer = '/mixes/genre/30931';
 timeoutBackDeezer = null;
-
 
 if (!localStorage.lastDonate) localStorage.lastDonate = null;
 if (!localStorage.biggestDonate) localStorage.biggestDonate = null;
@@ -46,24 +62,33 @@ asks['#skip'] = new asktag(3,function() {
 	chrome.tabs.sendMessage(musicTab.id,{'event':'skipSong'});
 });
 
+*/
+
 chrome.extension.onRequest.addListener(function(request, sender, callback) {
-	if (request.event == 'transactions') updateTransactions(request.list,callback);
+	if (request.event == 'open_admin') openAdmin(callback);
+
+	if (request.event == 'get_storage') callback(localStorage);
 	
 	if (request.event == 'music') {
 		musicTab = sender.tab;
 		updateMusic({'title':request.title,'artist':request.artist,'cover':request.cover},callback);
 	}
+	/*
+
+	if (request.event == 'transactions') updateTransactions(request.list,callback);
 
 	if (request.event == 'update_pos') updatePos(request.obj,request.top,request.left);
 	if (request.event == 'update_task') updateTask(request.task);
 
-	if (request.event == 'open_admin') openAdmin(callback);
-	if (request.event == 'get_storage') callback(localStorage);
 
 	if (request.source == 'bot_livecoding') {
 		if (request.event == 'new_message') checkMesage(request.obj,callback);
 	}
+
+	*/
 });
+
+/*
 
 if (!localStorage.lastBotMsg) localStorage.lastBotMsg = null;
 
@@ -72,9 +97,11 @@ function checkMesage(obj,callback) {
 
 	if (localStorage.lastBotMsg) {	
 		var last = JSON.parse(localStorage.lastBotMsg);
-		var dtLast = parseInt(last.timestamp);
-		var dtMsg = parseInt(obj.timestamp);
-		if (dtMsg < dtLast) return;
+		if (last) {
+			var dtLast = parseInt(last.timestamp);
+			var dtMsg = parseInt(obj.timestamp);
+			if (dtMsg < dtLast) return;
+		}
 	}
 
 	localStorage.lastBotMsg = JSON.stringify(obj);
@@ -82,7 +109,7 @@ function checkMesage(obj,callback) {
 	var parts = obj.message.split(' ');
 	var cmd = parts.shift();
 
-	if (cmd == '#hi') callback({'action':'send_message','username':obj.username,'message':'Hello!'});
+	if (cmd == '#hi' || cmd == '#oi') callback({'action':'send_message','username':obj.username,'message':'Olá! / Hello!'});
 	
 	if (cmd == '#music') {
 		var playing = JSON.parse(localStorage.nowPlaying);
@@ -132,6 +159,7 @@ function checkMesage(obj,callback) {
 		callback({'action':'send_message','username':obj.username,'message':'pediu pra mudar de musica! '+progress});
 	}
 }
+*/
 
 function openAdmin(callback) {
 	chrome.tabs.query({}, function(feed) {			
@@ -152,6 +180,7 @@ function openAdmin(callback) {
 		}
 	});
 }	
+/*
 
 function updatePos(obj,top,left) {
 	if (top || left) {
@@ -196,3 +225,5 @@ function updateTransactions(list,callback) {
 function tryToSendStorage() {	
 	if (adminTab) chrome.tabs.sendMessage(adminTab.id,{'event':'storage','storage':localStorage});
 }
+
+*/

@@ -14,24 +14,17 @@
 
 	"content_scripts": [
 		{
-			"matches": ["https://www.livecoding.tv/*/settings/transactions/"],
-			"js": [
-				"includes/scripts/jquery.js",
-				"scrap_live_transactions.js"
-			]
-		},
-		{
 			"matches": ["https://www.livecoding.tv/fiote/"],
 			"js": [
 				"includes/scripts/jquery.js",
-				"bot_livecoding.js"
+				"script_livecoding.js"
 			]
 		},
 		{
 			"matches": ["*://www.deezer.com/*"],
 			"js": [
 				"includes/scripts/jquery.js",
-				"scrap_deezer.js"
+				"script_deezer.js"
 			],
 			"run_at" :"document_end"
 		}
@@ -53,8 +46,8 @@
 	},
 	
 	"web_accessible_resources": [
-		"bot_livecoding_agent.js",
-		"scrap_deezer_agent.js"
+		"script_livecoding_agent.js",
+		"script_deezer_agent.js"
 	],
 
 	"content_security_policy": "script-src 'self' 'unsafe-eval' https://example.com; object-src 'self'"

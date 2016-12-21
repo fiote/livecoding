@@ -1,7 +1,11 @@
+// ==================== MESSAGES FROM SCRIPT =======================
+
 window.addEventListener('message',function(e) {
 	if (!e.data) return;
 	if (e.data.source == 'scrap_deezer') botExecute(e.data);
 },false);
+
+// ==================== ACTING ON REQUEST =======================
 
 function botExecute(feed) {
 	if (feed.action == 'play_song') {
