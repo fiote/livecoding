@@ -121,11 +121,7 @@ classBot = function() {
 	this.saveUsers = function() {
 		var dataUsers = {};
 		for (var username in dbUsers) dataUsers[username] = dbUsers[username].data;
-
-		console.log('dbUsers saving...');
-		chrome.storage.sync.set({'dbUsers':dataUsers}, function() {
-			console.log('dbUsers saved!',dataUsers);
-        });
+		chrome.storage.sync.set({'dbUsers':dataUsers});
 	};
 	
 	this.replyMe = function(username) {
@@ -285,7 +281,7 @@ classBot = function() {
 			});
 			return;
 		}
-		console.log('SEND MESSAGE',this.tab,data);
+		console.log('SEND MESSAGE',data);
 		chrome.tabs.sendMessage(this.tab.id,data,callback);
 	};
 };
