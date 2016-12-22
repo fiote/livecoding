@@ -1,9 +1,9 @@
 // ==================== MESSAGES FROM BACKGROUND =======================
 
 chrome.runtime.onMessage.addListener(function(request) {
-	console.log('listeresdad',request);
 	if (request.event == 'msgChat') msgChat(request); 
-});
+	if (request.event == 'getUserList') getUserList();
+}); 
 
 // ==================== ACTING ON REQUEST =======================
 
@@ -11,6 +11,12 @@ chrome.runtime.onMessage.addListener(function(request) {
 function msgChat(request) {
 	var dataExecute = {'source':'script_livecoding','action':'send_message','message':request.message};
 	window.postMessage(dataExecute,location.origin);
+}
+
+function getUserList() {
+	var list = [];
+	$('.roster-pane > div .label').each(function() { var $label = $(this); list.push($label.text()); });
+	botForward({'event':'user_list','list':list});
 }
 
 // ==================== INJECTING AGENT =======================

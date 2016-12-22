@@ -55,7 +55,12 @@ classPlayer = function() {
 			if (list.length) {
 				var row = list[0];
 				var music = new classMusic({'id':row.id,'artist':row.artist.name,'cover':row.album.cover_medium,'title':row.title_short,'duration':row.duration});
-				music.requestedby = user;
+				music.requestedby = user.username;
+
+				user.points -= myBot.points.music;
+				myBot.saveUsers();
+
+
 				self.queueMusic(music);
 			} else {
 				myBot.sendMessage({'event':'msgChat','message':'No music found.'});
