@@ -1,9 +1,15 @@
 console.log('dbUsers loading...');
 dbUsers = {};
+
 chrome.storage.sync.get(function(storage) {
-	dbUsers = storage.dbUsers;
-	//dbUsers = value;
-	console.log('dbUsers loaded!');
+	var dataUsers = storage.dbUsers || {};
+	for (var username in dataUsers) {
+		var data = dataUsers[username];
+		var user = new classUser(data);
+		dbUsers[username] = user;
+	}
+	console.log('dbUsers loaded!',dbUsers);
+	myBot.saveUsers();
 });
 
 adminUsername = 'fiote';
@@ -13,13 +19,17 @@ classBot = function() {
 	
 	this.lastdate = new Date().getTime();
 	
-	setInterval(function() { self.addPointsEveryone(); },5*60*1000);
+	var secondsTick = 60*5;	
+	setInterval(function() { self.addGoldEveryone(); },secondsTick*1000);
 
-	this.points = {
+	this.gold = {
 		'register':30,
 		'music':5,
-		'skip':1
+		'skip':1,
+		'level':10
 	};
+
+	this.bonus = {'exp':10,'gold':1};
 
 	this.setTab = function(tab) {
 		this.tab = tab;
@@ -39,15 +49,16 @@ classBot = function() {
 		if (cmd == '#entrar') this.addUser(username,'BR');
 		if (cmd == '#enter') this.addUser(username,'EN');
 
-		if (cmd == '#me') this.replyMe(username);
-
-		if (cmd == '#help') this.showHelp(username);
-
 		// player commands
 		if (cmd == '#music') this.replyMusic();
 		if (cmd == '#request') this.requestMusic(parts,username);
 		if (cmd == '#playlist') this.replyPlaylist();
-		if (cmd == '#skip') this.addSkipMusic(username);
+		if (cmd == '#skip') this.addSkipMusic(username);		
+		if (cmd == '#me') this.replyMe(username);
+		if (cmd == '#help') this.showHelp(username);
+
+		// 
+		if (cmd == '#rank') this.showRank();
 
 		// admin commands
 		if (username == adminUsername) {
@@ -64,84 +75,63 @@ classBot = function() {
 
 	this.gotLogin = function(obj) {
 		var username = obj.username;
-
 		var user = dbUsers[username];
 		if (user) {
-			var messages = {
-				'BR':'@'+username+', seja bem vindo de volta o/',
-				'EN':'@'+username+', welcome back o/'
-			}
-			var lg = user.language;
-			this.sendMessage({'event':'msgChat','message':messages[lg]});
+			user.returned();
 			this.showLgCount();
 		} else {
-			this.sendMessage({'event':'msgChat','message':'@'+username+'! | PT/BR? digite #entrar | EN/US? type #enter'});
+			var temp = new classUser(username);
+			temp.askToEnter();
 		}
 	};
 
 	this.addUser = function(username,lg) {
-		if (dbUsers[username]) {
-			var messages = {
-				'BR':'@'+username+', voce ja esta registrado.',
-				'EN':'@'+username+', you are registered already.'
-			}
-			this.sendMessage({'event':'msgChat','message':messages[lg]});
-		} else {
-			dbUsers[username] = {'username':username,'points':this.points.register};
-			var messages = {
-				'BR':'@'+username+', seja bem-vindo e obrigado por entrar! Voce tem '+this.points.register+' pontos! Digite #help para saber mais.',
-				'EN':'@'+username+', welcome and thanks for joining! You have '+this.points.register+' points! Type #help to know more.'
-			}
-			this.sendMessage({'event':'msgChat','message':messages[lg]});
-		}
 		var user = dbUsers[username];
-		user.language = lg;
-		this.saveUsers();
-		this.showLgCount();
+		if (user) {
+			user.already();
+		} else {
+			user = new classUser({'username':username,'language':lg,'gold':0,'level':1,'exp':0});
+			user.enter();
+			dbUsers[username] = user;
+			this.saveUsers();
+			this.showLgCount();
+		}
 	};
 
 	this.removeUser = function(parts) {
 		var username = parts[0];
-		if (dbUsers[username]) {
+		var user = dbUsers[username];
+		if (user) {
 			delete dbUsers[username];
-			this.sendMessage({'event':'msgChat','message':'@'+username+' removed.'});
+			user.removed();
 			this.saveUsers();
 			this.showLgCount();
+		}
+
+		if (dbUsers[username]) {
+			delete dbUsers[username];
 		}		
 	};
 
 	this.notUser = function(username) {
-		this.sendMessage({'event':'msgChat','message':'@'+username+', Portugues? digite #entrar primeiro | English? Type #enter first.'});
-	};
-
-	this.notPoints = function(user,cost) {
-		var abscost = Math.abs(cost);
-		var messages = {
-			'BR':'@'+username+', voce nao tem pontos suficientes ('+user.points+'/'+abscost+').',
-			'EN':'@'+username+', you dont have enough points ('+user.points+'/'+abscost+').'
-		};
-		var lg = user.language;
-		this.sendMessage({'event':'msgChat','message':messages[lg]});
+		var temp = new classUser(username);
+		temp.askToEnter();
 	};
 
 	this.saveUsers = function() {
+		var dataUsers = {};
+		for (var username in dbUsers) dataUsers[username] = dbUsers[username].data;
+
 		console.log('dbUsers saving...');
-		chrome.storage.sync.set({'dbUsers':dbUsers}, function() {
-			console.log('dbUsers saved!');
+		chrome.storage.sync.set({'dbUsers':dataUsers}, function() {
+			console.log('dbUsers saved!',dataUsers);
         });
 	};
 	
 	this.replyMe = function(username) {
 		var user = dbUsers[username];
 		if (!user) return this.notUser(username);
-
-		var pts = user.points;
-		var messages = {
-			'BR':'@'+username+', voce tem '+pts+' pontos.',
-			'EN':'@'+username+', you have '+pts+' points.'
-		}
-		var lg = user.language;
-		this.sendMessage({'event':'msgChat','message':messages[lg]});
+		user.status();
 	};
 
 	this.showLgCount = function() {
@@ -160,7 +150,7 @@ classBot = function() {
 				var username = list[i];
 				if (username != adminUsername) {
 					var user = dbUsers[username];
-						var lg = (user) ? user.language : '??';
+					var lg = (user) ? user.data.language : '??';
 					if (!lgs[lg]) lgs[lg] = 0;
 					lgs[lg]++;
 				}
@@ -168,26 +158,29 @@ classBot = function() {
 			var blocks = [];
 			var names = {'EN':'English speakers','BR':'Brasileiros','??':'??'};
 			for (var lg in lgs) blocks.push(names[lg]+' ('+lgs[lg]+')');
-			this.sendMessage({'event':'msgChat','message':blocks.join(', ')+'.'});
+			if (blocks.length > 0) this.sendMessage({'event':'msgChat','message':blocks.join(', ')+'.'});
 
 			this.lgCount = false;
 		}
 
 		if (this.addNext) {
-			var any = false;
+			var toadd = [];
 			for (var i = 0; i < list.length; i++) {
 				var username = list[i];
 				if (username != adminUsername) {
 					var user = dbUsers[username];
-					if (user) {
-						user.points += 1;
-						any = true;
-					}
+					if (user) toadd.push(user);
 				}
 			}		
-			if (any) {
-				this.sendMessage({'event':'msgChat','message':'+1p to everyone! +1 pra todo mundo!'});				
-				this.saveUsers();
+			if (toadd.length) {
+				var exp = this.bonus.exp;
+				var gold = this.bonus.gold;
+				this.sendMessage({'event':'msgChat','message':'Online Bonus! [+'+exp+'xp +'+gold+'g]'});		
+				for (var i = 0; i < toadd.length; i++) {
+					var user = toadd[i];
+					user.addGold(gold);
+					user.addExp(exp);
+				}
 			}
 			this.addNext = false;
 		}
@@ -196,21 +189,34 @@ classBot = function() {
 	this.showHelp = function(username) {
 		var user = dbUsers[username];
 		if (!user) return this.notUser(username);
-
-		var mu = this.points.music;
-		var sk = this.points.skip;
-		var lg = user.language;
-
-		var messages = {
-			'BR':'@'+username+', digite #music para ver a musica que esta tocando, #request para pedir uma musica (-'+mu+'p), #skip para tentar pular a musica atual (-'+sk+'p) e #me para ver seus dados.',
-			'EN':'@'+username+', type #music to show the current song playing, #request to request any song you want  (-'+mu+'p), #skip to try to skip the song playing (-'+sk+'p) e #me to see your data.'
-		}
-		this.sendMessage({'event':'msgChat','message':messages[lg]});
+		user.showHelp();
 	};
 
-	this.addPointsEveryone = function() {
+	this.addGoldEveryone = function() {
 		this.addNext = true;
 		this.requestUserList();
+	};
+
+	this.showRank = function() {
+		var list = [];
+		for (var username in dbUsers) {
+			var user = dbUsers[username];
+			//if (username != adminUsername) 
+				list.push(user);
+		}
+		list.sort(function(a,b) {
+			if (a.data.level > b.data.level) return -1;
+			if (a.data.level < b.data.level) return +1;
+			if (a.data.exp > b.data.exp) return -1;
+			if (a.data.exp < b.data.exp) return +1;
+			return 0;
+		});
+		
+		for (var i = 0; i < list.length && i < 5; i++) {
+			var user = list[i];
+			var n = i+1;
+			user.msg(n+') @USER, Exp: @XP/@XPNEED');
+		}
 	};
 
 	// ==============================================================
@@ -219,23 +225,24 @@ classBot = function() {
 
 	this.replyMusic = function() {
 		var playing = myPlayer.getMusic();
-		var msg = (playing) ? playing.data.title+', by '+playing.data.artist+'.' : 'No song currently playing.';
+		var msg = (playing) ? playing.data.title+', by '+playing.data.artist+'.' : 'No song currently playing (or the deezer tab is not connected).';
 		this.sendMessage({'event':'msgChat','message':msg});
 	};
 
 	this.addSkipMusic = function(username) {
 		var user = dbUsers[username];
 		if (!user) return this.notUser(username);
-		if (user.points < this.points.skip) return this.notPoints(user,this.points.skip);
 
-		user.points -= this.points.skip;
-		this.saveUsers();
+		var cost = this.gold.skip;
+		if (user.gold < cost) return user.notgold(cost);
 
+		user.addGold(cost*-1);
 		myPlayer.addSkipMusic();
 	};
 
 	this.clearQueue = function() {
 		myPlayer.queue = [];
+		myPlayer.refreshQueue();
 		this.sendMessage({'event':'msgChat','message':'The music queue is now empty.'});
 	};
 
@@ -245,7 +252,8 @@ classBot = function() {
 			this.sendMessage({'event':'msgChat','message':'No musics on the queue.'});
 		} else {
 			var max = playlist.length;
-			if (max > 3) max = 3;
+			var maxmax = 5;
+			if (max > maxmax) max = maxmax;
 			this.sendMessage({'event':'msgChat','message':'Next '+max+' musics queued:'});
 			for (var i = 0; i < max; i++) {
 				var n = i+1;
@@ -258,7 +266,8 @@ classBot = function() {
 	this.requestMusic = function(parts,username,callback) {
 		var user = dbUsers[username];
 		if (!user) return this.notUser(username);
-		if (user.points < this.points.music) return this.notPoints(user,this.points.music);
+		var cost = this.gold.music;
+		if (user.gold < cost) return user.notgold(cost);
 
 		var query = parts.join(' ');
 		myPlayer.requestMusic(query,user,callback);
